@@ -39,17 +39,24 @@ app.set("view engine", "ejs");
 
 //==================DB STRT=================//
 
-mongoose.connect("mongodb://localhost:27017/secretsDB", {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect("mongodb://localhost:27017/secretsDB", {
+                                                          useFindAndModify: false,
+                                                          useNewUrlParser: true,
+                                                          useUnifiedTopology: true
+                                                        }
+);
 
 const authSchema = new mongoose.Schema(
   {
     username: String,
-    password: String
+    password: String,
+    secret: Array
   }
 );
 
 const secretSchema = new mongoose.Schema(
   {
+    userid: String,
     secret: String
   }
 );
@@ -83,21 +90,27 @@ app.get("/", (req, res)=>{
 });
 
 app.get("/secrets", (req, res)=>{
-  console.log("scret");
+  secretModel.find({},(err, result)=>{
+    if(err)
+      console.log(err);
+    else
+      res.render("secrets", {secrets: result});
+  });
+
+});
+
+app.get("/submit", (req, res)=>{
+  console.log("submit");
   console.log(req.user);
   console.log(req.session);
   console.log(req.sessionID);
   //isAuthenticated probably checks to see the req.user value, thats why when session is reloaded,
   //even though we hava cookie it still returns false.
   if(req.isAuthenticated()){
-    console.log("is authenticated !!");
-    console.log(req.user);
-    console.log(req.session);
-    console.log(req.sessionID);
-    res.render("secrets");
+    res.render("submit");
   }
-  else {
-    res.redirect("login");
+  else{
+    res.redirect("/login");
   }
 });
 
@@ -161,6 +174,38 @@ app.post("/login",(req, res)=>{
 
 });
 
+app.post("/submit", (req, res)=>{
+  if(req.isAuthenticated()){
+    const id = req.user._id;
+    const secret = req.body.secret;
+    const secretObj = new secretModel(
+      {
+        userid:id,
+        secret:secret
+      }
+    );
+    console.log("User : "+id);
+    //push into auth secrets array. doing for test and exrecise purposes.
+    authModel.findOneAndUpdate({_id : id}, {$push : {secret : secret}}, (err, res)=>{
+      if(err)
+        console.log(err);
+      else
+        console.log("updated "+id);
+    });
+
+    //push into secrests collections
+    secretObj.save((err)=>{
+      if(err)
+        console.log(err);
+      else
+        res.redirect("/secrets");
+    });
+
+  }
+  else{
+    res.redirect("/login");
+  }
+});
 
 
 //=================SERVER LISTEN============//
