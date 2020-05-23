@@ -39,7 +39,7 @@ app.set("view engine", "ejs");
 
 //==================DB STRT=================//
 
-mongoose.connect("mongodb://localhost:27017/userDB", {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect("mongodb://localhost:27017/secretsDB", {useNewUrlParser: true, useUnifiedTopology: true});
 
 const authSchema = new mongoose.Schema(
   {
@@ -48,10 +48,18 @@ const authSchema = new mongoose.Schema(
   }
 );
 
+const secretSchema = new mongoose.Schema(
+  {
+    secret: String
+  }
+);
+
+
 //add passport local mongoose as a plugin to schema.
 authSchema.plugin(plmongoose);
 
 const authModel = mongoose.model("auth", authSchema);
+const secretModel = mongoose.model("secret", secretSchema);
 
 //create stratergy based on model for passport to use.
 passport.use(authModel.createStrategy());
@@ -110,7 +118,7 @@ app.get("/register", (req, res)=>{
 });
 
 app.get("/logout",(req, res)=>{
-  //req.logout will not delete the cookie or session. 
+  //req.logout will not delete the cookie or session.
   req.logout();
   res.redirect("/");
 });
