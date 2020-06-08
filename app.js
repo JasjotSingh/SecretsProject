@@ -1,4 +1,5 @@
 //jshint esversion:6
+require("dotenv").config();
 const express  = require("express");
 const ejs = require("ejs");
 //needed for db
@@ -23,7 +24,7 @@ app.use(express.urlencoded({extended:true}) );
 app.use(
   session(
     {
-      secret: 'keyboard cat',
+      secret: process.env.SECRET_KEY,
       resave: false,
       saveUninitialized: false,
     }
@@ -39,24 +40,24 @@ app.set("view engine", "ejs");
 
 //==================DB STRT=================//
 
-mongoose.connect("mongodb://localhost:27017/secretsDB", {
-                                                          useFindAndModify: false,
-                                                          useNewUrlParser: true,
-                                                          useUnifiedTopology: true
-                                                        }
+mongoose.connect(process.env.DB_CONNECTION, {
+                                                useFindAndModify: false,
+                                                useNewUrlParser: true,
+                                                useUnifiedTopology: true
+                                              }
 );
 
 const authSchema = new mongoose.Schema(
   {
     username: String,
     password: String,
-    secret: Array
+    // secret: Array
   }
 );
 
 const secretSchema = new mongoose.Schema(
   {
-    userid: String,
+    // userid: String,
     secret: String
   }
 );
@@ -85,7 +86,7 @@ passport.deserializeUser(function(id, done) {
 
 //==================DB END===================//
 app.get("/", (req, res)=>{
-  console.log(req.sessionID);
+  //console.log(req.sessionID);
   res.render("home");
 });
 
@@ -100,10 +101,10 @@ app.get("/secrets", (req, res)=>{
 });
 
 app.get("/submit", (req, res)=>{
-  console.log("submit");
-  console.log(req.user);
-  console.log(req.session);
-  console.log(req.sessionID);
+  // console.log("submit");
+  // console.log(req.user);
+  // console.log(req.session);
+  // console.log(req.sessionID);
   //isAuthenticated probably checks to see the req.user value, thats why when session is reloaded,
   //even though we hava cookie it still returns false.
   if(req.isAuthenticated()){
@@ -115,7 +116,7 @@ app.get("/submit", (req, res)=>{
 });
 
 app.get("/login", (req, res)=>{
-  console.log(req.sessionID);
+  // console.log(req.sessionID);
   if(req.isAuthenticated())
     res.redirect("/secrets");
   else
@@ -123,7 +124,7 @@ app.get("/login", (req, res)=>{
 });
 
 app.get("/register", (req, res)=>{
-  console.log(req.sessionID);
+  // console.log(req.sessionID);
   if(req.isAuthenticated())
     res.redirect("/secrets");
   else
@@ -180,18 +181,18 @@ app.post("/submit", (req, res)=>{
     const secret = req.body.secret;
     const secretObj = new secretModel(
       {
-        userid:id,
+        // userid:id,
         secret:secret
       }
     );
-    console.log("User : "+id);
+    // console.log("User : "+id);
     //push into auth secrets array. doing for test and exrecise purposes.
-    authModel.findOneAndUpdate({_id : id}, {$push : {secret : secret}}, (err, res)=>{
-      if(err)
-        console.log(err);
-      else
-        console.log("updated "+id);
-    });
+    // authModel.findOneAndUpdate({_id : id}, {$push : {secret : secret}}, (err, res)=>{
+    //   if(err)
+    //     console.log(err);
+    //   else
+    //     console.log("updated "+id);
+    // });
 
     //push into secrests collections
     secretObj.save((err)=>{
